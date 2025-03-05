@@ -1,5 +1,5 @@
 ' =====================================================================
-'	Test Cases
+'	Test
 ' =====================================================================
 
 Private Const CustForm_Card                     As String = "IPM.Post.Card"
@@ -26,7 +26,21 @@ Private Const TEST_Table As String = _
     Private Const TEST_TableColClass    As Integer = 0
     Private Const TEST_TableColType     As Integer = 1
     Private Const TEST_TableColName     As Integer = 2
+    
+Private Const TEST_List As String = _
+ _
+  " Class                           " & vbLf & _
+ _
+    CustForm_Card & "               " & vbLf & _
+    CustForm_WipProject & "         " & vbLf & _
+    CustForm_WipActivity & "        " & vbLf & _
+    CustForm_WipProjectV4 & "       " & vbLf & _
+ "" & _
+    "RowA                           " & vbLf & _
+    "RowB                           " & vbLf & _
+    "RowC                           "
 '
+
 Public Sub TEST_TableConst()
 
     If Misc_TableConstExist(TEST_Table, "RowA") Then Debug.Print "RowA Exist"
@@ -49,32 +63,49 @@ Public Sub TEST_TableConst()
             Debug.Print "(" & RowIndex & ", " & ColIndex & ") = " & MyArray(RowIndex, ColIndex)
         Next ColIndex
     Next RowIndex
-
+    
+    If Misc_TableConstExist(TEST_List, "RowA") Then Debug.Print "RowA Exist in List"
+    If Not Misc_TableConstExist(TEST_List, "RowX") Then Debug.Print "RowX Does Not Exist in List"
+    
+    Dim MyList() As String
+    MyList = Misc_TableConstLoad(TEST_List, List:=True)
+    For RowIndex = 0 To UBound(MyList)
+        Debug.Print "(" & RowIndex & ") = " & MyList(RowIndex)
+    Next RowIndex
+    
 End Sub
 
 ' =====================================================================
 '   Table Constant
 ' =====================================================================
 
-'   Load a Table into a 2D Array
+'   Load a List/Table into a 1D/2D Array
 '
-Public Function Misc_TableConstLoad(ByVal Table As String) As String()
+Public Function Misc_TableConstLoad(ByVal Table As String, Optional ByVal List As Boolean = False) As String()
 
     Dim Rows() As String
     Rows = Split(Table, vbLf)
     Dim Cols() As String
     Cols = Split(Rows(0), "|")
-    Dim TableArray() As String
-    ReDim TableArray(0 To UBound(Rows), 0 To UBound(Cols))
     
+    Dim TableArray() As String
     Dim RowsIndex As Long
-    For RowsIndex = 0 To UBound(Rows)
-        Cols = Split(Rows(RowsIndex), "|")
-        Dim ColsIndex As Long
-        For ColsIndex = 0 To UBound(Cols)
-            TableArray(RowsIndex, ColsIndex) = Trim(Cols(ColsIndex))
-        Next ColsIndex
-    Next RowsIndex
+    Dim ColsIndex As Long
+    
+    If List Then
+        ReDim TableArray(0 To UBound(Rows))
+        For RowsIndex = 0 To UBound(Rows)
+            TableArray(RowsIndex) = Trim(Split(Rows(RowsIndex), "|")(0))
+        Next RowsIndex
+    Else
+        ReDim TableArray(0 To UBound(Rows), 0 To UBound(Cols))
+        For RowsIndex = 0 To UBound(Rows)
+            Cols = Split(Rows(RowsIndex), "|")
+            For ColsIndex = 0 To UBound(Cols)
+                TableArray(RowsIndex, ColsIndex) = Trim(Cols(ColsIndex))
+            Next ColsIndex
+        Next RowsIndex
+    End If
     
     Misc_TableConstLoad = TableArray()
 
