@@ -49,13 +49,15 @@ Public Sub TEST_TableConst()
     
     Dim MyValue As String
     If Misc_TableConstFind(TEST_Table, "RowA", TEST_TableColName, MyValue) Then Debug.Print "(RowA, 2) = " & MyValue
-    If Misc_TableConstFindCol(TEST_Table, "RowA", "Name", MyValue) Then Debug.Print "(RowA, Name) = " & MyValue
+    Dim MyColIndex As Long
+    If Misc_TableConstCol(TEST_Table, "Name", MyColIndex) Then Debug.Print "ColKey: Name = ColIndex: " & MyColIndex
+    If Misc_TableConstFind(TEST_Table, "RowA", MyColIndex, MyValue) Then Debug.Print "(RowA, Name) = " & MyValue
     
     If Not Misc_TableConstFind(TEST_Table, "RowX", TEST_TableColName, MyValue) Then Debug.Print "RowX not found"
     If Misc_TableConstFind(TEST_Table, CustForm_WipProject, TEST_TableColName, MyValue) Then Debug.Print "(" & CustForm_WipProject & ", Name) = " & MyValue
     
     Dim MyArray() As String
-    MyArray = Misc_TableConstLoad(TEST_Table)
+    MyArray = Misc_TableConst(TEST_Table)
     Dim RowIndex As Long
     For RowIndex = 0 To UBound(MyArray, 1)
         Dim ColIndex As Long
@@ -68,7 +70,7 @@ Public Sub TEST_TableConst()
     If Not Misc_TableConstExist(TEST_List, "RowX") Then Debug.Print "RowX Does Not Exist in List"
     
     Dim MyList() As String
-    MyList = Misc_TableConstLoad(TEST_List, List:=True)
+    MyList = Misc_TableConstList(TEST_Table, TEST_TableColName)
     For RowIndex = 0 To UBound(MyList)
         Debug.Print "(" & RowIndex & ") = " & MyList(RowIndex)
     Next RowIndex
@@ -79,9 +81,9 @@ End Sub
 '   Table Constant
 ' =====================================================================
 
-'   Load a List/Table into a 1D/2D Array
+'   Build a 2D Array from a Table Constant
 '
-Public Function Misc_TableConstLoad(ByVal Table As String, Optional ByVal List As Boolean = False) As String()
+Public Function Misc_TableConst(ByVal Table As String) As String()
 
     Dim Rows() As String
     Rows = Split(Table, vbLf)
@@ -92,22 +94,36 @@ Public Function Misc_TableConstLoad(ByVal Table As String, Optional ByVal List A
     Dim RowsIndex As Long
     Dim ColsIndex As Long
     
-    If List Then
-        ReDim TableArray(0 To UBound(Rows))
-        For RowsIndex = 0 To UBound(Rows)
-            TableArray(RowsIndex) = Trim(Split(Rows(RowsIndex), "|")(0))
-        Next RowsIndex
-    Else
-        ReDim TableArray(0 To UBound(Rows), 0 To UBound(Cols))
-        For RowsIndex = 0 To UBound(Rows)
-            Cols = Split(Rows(RowsIndex), "|")
-            For ColsIndex = 0 To UBound(Cols)
-                TableArray(RowsIndex, ColsIndex) = Trim(Cols(ColsIndex))
-            Next ColsIndex
-        Next RowsIndex
-    End If
+    ReDim TableArray(0 To UBound(Rows), 0 To UBound(Cols))
+    For RowsIndex = 0 To UBound(Rows)
+        Cols = Split(Rows(RowsIndex), "|")
+        For ColsIndex = 0 To UBound(Cols)
+            TableArray(RowsIndex, ColsIndex) = Trim(Cols(ColsIndex))
+        Next ColsIndex
+    Next RowsIndex
     
-    Misc_TableConstLoad = TableArray()
+    Misc_TableConst = TableArray()
+
+End Function
+
+'   Build a 1D Array From a Table Constant and Column Index
+'
+Public Function Misc_TableConstList(ByVal Table As String, ByVal ColIndex As Long) As String()
+
+    Dim Rows() As String
+    Rows = Split(Table, vbLf)
+    Dim Cols() As String
+    
+    Dim ListArray() As String
+    Dim RowsIndex As Long
+    
+    ReDim ListArray(0 To UBound(Rows))
+    For RowsIndex = 0 To UBound(Rows)
+        Cols = Split(Rows(RowsIndex), "|")
+        ListArray(RowsIndex) = Trim(Cols(ColIndex))
+    Next RowsIndex
+    
+    Misc_TableConstList = ListArray()
 
 End Function
 
@@ -119,7 +135,7 @@ Public Function Misc_TableConstFind(ByVal Table As String, ByVal RowKey As Strin
 Misc_TableConstFind = False
 
     Dim TableArray() As String
-    TableArray = Misc_TableConstLoad(Table)
+    TableArray = Misc_TableConst(Table)
     
     Dim RowIndex As Long
     For RowIndex = 1 To UBound(TableArray, 1)
@@ -133,7 +149,7 @@ Misc_TableConstFind = False
 
 End Function
 
-'   Does RowKey exist in Table data rows?
+'   Does RowKey exist in the Table data rows?
 '
 '   False   <-  If RowKey not found
 '
@@ -144,27 +160,24 @@ Public Function Misc_TableConstExist(ByVal Table As String, ByVal RowKey As Stri
 
 End Function
 
-'   Get a Table data Value from the first matching RowKey and Header ColKey
+'   Get a ColIndex from a Table and the first matching Header ColKey
 '
-'   False   <-  If RowKey not found
+'   False   <-  If ColKey not found
 '
-Public Function Misc_TableConstFindCol(ByVal Table As String, ByVal RowKey As String, ByVal ColKey As String, ByRef Value As String) As Boolean
+Public Function Misc_TableConstCol(ByVal Table As String, ByVal ColKey As String, ByRef ColIndex As Long) As Boolean
 
     Dim Rows() As String
     Rows = Split(Table, vbLf)
     Dim Cols() As String
     Cols = Split(Rows(0), "|")
     
-    Dim ColIndex As Long
     For ColIndex = 0 To UBound(Cols)
     
         If StrComp(Trim(Cols(ColIndex)), ColKey, vbTextCompare) = 0 Then
-            Misc_TableConstFindCol = Misc_TableConstFind(Table, RowKey, ColIndex, Value)
+            Misc_TableConstCol = True
             Exit Function
         End If
     
     Next ColIndex
-
-    Debug.Print "ColKey not found.": Stop: Exit Function
 
 End Function
