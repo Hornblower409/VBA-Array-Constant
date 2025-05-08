@@ -1,0 +1,2 @@
+# Reclassifies `.bas` files as VBA. Auto was Visual Basic 6.0
+*.bas linguist-language=VBA
